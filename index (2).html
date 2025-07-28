@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-C QUIZZIZ - Kuis Interaktif Real-time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .wave-bg {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23ffffff'%3E%3C/path%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='%23ffffff'%3E%3C/path%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%23ffffff'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+            background-size: cover;
+            opacity: 0.1;
+        }
+
+        .fish-float {
+            animation: fishFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes fishFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .bubble {
+            animation: bubbleFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes bubbleFloat {
+            0%, 100% { transform: translateY(0px); opacity: 0.7; }
+            50% { transform: translateY(-30px); opacity: 1; }
+        }
+
+        .timer-ring {
+            animation: timerSpin 40s linear;
+        }
+
+        @keyframes timerSpin {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: 251.2; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-correct {
+            animation: pulseCorrect 0.6s ease-in-out;
+        }
+
+        @keyframes pulseCorrect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: #10b981; }
+            100% { transform: scale(1); }
+        }
+
+        .pulse-wrong {
+            animation: pulseWrong 0.6s ease-in-out;
+        }
+
+        @keyframes pulseWrong {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: #ef4444; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="wave-bg min-h-screen">
+    <!-- Floating Ocean Elements -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="fish-float absolute top-20 left-10 text-blue-200 text-2xl">
+            <i class="fas fa-fish"></i>
+        </div>
+        <div class="fish-float absolute top-40 right-20 text-blue-300 text-xl" style="animation-delay: -2s;">
+            <i class="fas fa-fish"></i>
+        </div>
+        <div class="bubble absolute bottom-20 left-1/4 w-4 h-4 bg-white bg-opacity-30 rounded-full"></div>
+        <div class="bubble absolute bottom-32 right-1/3 w-6 h-6 bg-white bg-opacity-20 rounded-full" style="animation-delay: -1s;"></div>
+        <div class="bubble absolute bottom-16 left-1/2 w-3 h-3 bg-white bg-opacity-40 rounded-full" style="animation-delay: -3s;"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
+
+        <!-- Join Quiz Page -->
+        <div id="joinPage" class="bg-white bg-opacity-95 backdrop-blur-sm rounded-3xl shadow-2xl p-10 w-full max-w-lg fade-in">
+            <div class="text-center mb-10">
+                <div class="text-7xl mb-6 animate-bounce">
+                    🌊
+                </div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-3">X-C QUIZZIZ</h1>
+                <p class="text-blue-600 text-lg font-medium">Kuis Sejarah Islam Indonesia</p>
+                <div class="mt-4 flex items-center justify-center space-x-2 text-sm text-blue-500">
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span id="syncStatus">Local Storage + Google Sheets Ready</span>
+                </div>
+            </div>
+
+            <form id="joinForm" class="space-y-6">
+                <div class="relative">
+                    <label class="block text-blue-700 font-semibold mb-3">
+                        <i class="fas fa-user mr-2 text-blue-500"></i>Nama Lengkap
+                    </label>
+                    <input type="text" id="playerName" required 
+                           class="w-full px-5 py-4 border-2 border-blue-200 rounded-2xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-lg bg-blue-50 focus:bg-white shadow-inner"
+                           placeholder="Masukkan nama lengkap Anda"
+                           autocomplete="off">
+                    <div class="absolute right-4 top-12 text-blue-400">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label class="block text-blue-700 font-semibold mb-3">
+                        <i class="fas fa-key mr-2 text-blue-500"></i>Kode Kuis
+                    </label>
+                    <input type="text" id="roomCode" required 
+                           class="w-full px-5 py-4 border-2 border-blue-200 rounded-2xl focus:border-blue-500 focus:outline-none transition-all duration-300 text-center text-xl font-mono bg-blue-50 focus:bg-white shadow-inner tracking-widest"
+                           placeholder="OCEAN123"
+                           autocomplete="off"
+                           style="text-transform: uppercase;">
+                    <div class="absolute right-4 top-12 text-blue-400">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white font-bold py-4 px-6 rounded-2xl hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
+                    <i class="fas fa-rocket mr-3"></i>Mulai Kuis Sekarang!
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <div class="flex items-center justify-center space-x-4 text-sm text-blue-400">
+                    <div class="flex items-center space-x-1">
+                        <i class="fas fa-users"></i>
+                        <span id="onlineCount">0</span>
+                        <span>online</span>
+                    </div>
+                    <div class="w-1 h-1 bg-blue-300 rounded-full"></div>
+                    <div class="flex items-center space-x-1">
+                        <i class="fas fa-clock"></i>
+                        <span>25 soal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quizPage" class="hidden bg-white bg-opacity-95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 w-full max-w-4xl fade-in">
+            <!-- Quiz Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="text-2xl text-blue-500">
+                        <i class="fas fa-water"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-blue-800">KELAS X-C</h2>
+                        <p class="text-blue-600 text-sm">Room: <span id="currentRoom"></span></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-800" id="currentScore">0</div>
+                        <div class="text-xs text-blue-600">Skor</div>
+                    </div>
+
+                    <!-- Timer -->
+                    <div class="relative w-16 h-16">
+                        <svg class="w-16 h-16 transform -rotate-90">
+                            <circle cx="32" cy="32" r="28" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                            <circle id="timerCircle" cx="32" cy="32" r="28" stroke="#3b82f6" stroke-width="4" 
+                                    fill="none" stroke-dasharray="175.84" stroke-dashoffset="0" class="timer-ring"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span id="timeLeft" class="text-lg font-bold text-blue-800">40</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Progress -->
+            <div class="mb-6">
+                <div class="flex justify-between text-sm text-blue-600 mb-2">
+                    <span>Soal <span id="currentQuestion">1</span> dari <span id="totalQuestions">1</span></span>
+                    <span id="questionType" class="font-medium">Pilihan Ganda</span>
+                </div>
+                <div class="w-full bg-blue-100 rounded-full h-2">
+                    <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 4%"></div>
+                </div>
+            </div>
+
+            <!-- Question Content -->
+            <div id="questionContent" class="mb-8">
+                <h3 id="questionText" class="text-xl font-semibold text-gray-800 mb-6"></h3>
+
+                <!-- Multiple Choice Options -->
+                <div id="mcOptions" class="space-y-3">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+
+                <!-- Essay Input -->
+                <div id="essayInput" class="hidden">
+                    <textarea id="essayAnswer" 
+                              class="w-full h-32 px-4 py-3 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"
+                              placeholder="Tulis jawaban Anda di sini..."></textarea>
+                    <button id="submitEssay" 
+                            class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>Kirim Jawaban
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div id="feedback" class="hidden mb-6 p-4 rounded-xl text-center font-medium">
+                <div id="feedbackIcon" class="text-3xl mb-2"></div>
+                <div id="feedbackText"></div>
+            </div>
+        </div>
+
+        <!-- Completion Animation -->
+        <div id="completionScreen" class="hidden bg-white bg-opacity-95 backdrop-blur-sm rounded-3xl shadow-2xl p-12 w-full max-w-lg fade-in text-center">
+            <div class="animate-bounce mb-6">
+                <div class="text-6xl text-green-500 mb-4">
+                    ✅
+                </div>
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                    Selamat!
+                </h2>
+                <p class="text-xl text-gray-700 font-medium">
+                    Anda telah menyelesaikan soal
+                </p>
+            </div>
+
+            <div class="flex items-center justify-center space-x-2 text-blue-600">
+                <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                <span class="ml-3 text-lg font-medium">Memuat hasil...</span>
+            </div>
+        </div>
+
+        <!-- Thank You Page -->
+        <div id="thankYouPage" class="hidden bg-white bg-opacity-95 backdrop-blur-sm rounded-3xl shadow-2xl p-10 w-full max-w-2xl fade-in">
+            <div class="text-center mb-8">
+                <div class="text-6xl mb-6 animate-bounce">
+                    🎉
+                </div>
+                <h2 class="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                    Terima Kasih!
+                </h2>
+                <p class="text-xl text-gray-700 mb-2">
+                    Anda telah menyelesaikan kuis dengan baik
+                </p>
+                <p class="text-lg text-blue-600 font-medium">
+                    Kelas X-C - Sejarah Islam Indonesia
+                </p>
+            </div>
+
+            <!-- Score Display -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 mb-8 text-center border-2 border-blue-200">
+                <div class="text-sm text-blue-600 mb-2 font-medium">SKOR ANDA</div>
+                <div class="text-5xl font-bold text-blue-700 mb-2" id="finalScore">0</div>
+                <div class="text-blue-600">dari 2500 poin maksimal</div>
+                <div class="mt-4 text-sm text-gray-600">
+                    <i class="fas fa-user mr-2"></i>
+                    <span id="finalPlayerName" class="font-medium"></span>
+                </div>
+            </div>
+
+            <!-- Motivational Message -->
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 mb-8 border-2 border-purple-200">
+                <div class="text-center">
+                    <div class="text-3xl mb-3">✨</div>
+                    <h3 class="text-xl font-bold text-purple-800 mb-3" id="motivationTitle">Luar Biasa!</h3>
+                    <p class="text-purple-700 text-sm leading-relaxed" id="motivationMessage">
+                        Setiap langkah dalam belajar adalah pencapaian yang patut dibanggakan. 
+                        Pengetahuan yang Anda peroleh hari ini akan menjadi bekal berharga untuk masa depan. 
+                        Terus semangat belajar dan jangan pernah berhenti untuk berkembang! 🌟
+                    </p>
+                </div>
+            </div>
+
+            <!-- WhatsApp Share -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-8 border-2 border-green-200">
+                <div class="text-center mb-4">
+                    <div class="text-2xl mb-2">📱</div>
+                    <h3 class="text-lg font-bold text-green-800 mb-2">Bagikan Hasil Anda</h3>
+                    <p class="text-green-700 text-sm mb-4">
+                        Klik tombol di bawah untuk mengirim hasil kuis Anda ke guru melalui WhatsApp
+                    </p>
+                </div>
+
+                <button id="shareWhatsApp" 
+                        class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-4 px-6 rounded-2xl hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl">
+                    <i class="fab fa-whatsapp mr-3 text-xl"></i>
+                    Kirim Hasil ke Guru via WhatsApp
+                </button>
+
+                <div class="mt-4 text-center text-xs text-green-600">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Akan membuka WhatsApp dengan pesan otomatis berisi nama dan skor Anda
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center space-y-4">
+                <div class="text-sm text-gray-500 mb-4">
+                    <i class="fas fa-check-circle mr-1 text-green-500"></i>
+                    Kuis telah selesai - Anda hanya dapat mengerjakan sekali
+                </div>
+
+                <div class="flex justify-center space-x-4">
+                    <button id="newQuizBtn" 
+                            class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-home mr-2"></i>Kembali ke Beranda
+                    </button>
+                    <button id="adminResetBtn" 
+                            class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-key mr-2"></i>Reset Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        // Security features - but allow input fields to work
+        document.addEventListener('contextmenu', e => {
+            if (!e.target.matches('input, textarea')) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            // Allow normal typing in input fields
+            if (e.target.matches('input, textarea')) {
+                return true;
+            }
+
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+                (e.ctrlKey && e.key === 'u') ||
+                (e.ctrlKey && e.key === 's') ||
+                (e.ctrlKey && e.key === 'f') ||
+                (e.key === 'F5') ||
+                (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Prevent text selection except in input fields
+        document.onselectstart = function(e) { 
+            return e.target.matches('input, textarea');
+        };
+        document.onmousedown = function(e) { 
+            return e.target.matches('input, textarea, button');
+        };
+
+        // Disable drag except for input fields
+        document.ondragstart = function(e) { 
+            return e.target.matches('input, textarea');
+        };
+
+        // Prevent page refresh and navigation
+        window.addEventListener('beforeunload', function(e) {
+            if (currentPlayer && currentRoom) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+        // GOOGLE SHEETS INTEGRATION - Real-time data sync!
+        // Connect to Google Sheets for easy data management
+
+        // Global variables
+        let currentPlayer = null;
+        let currentRoom = null;
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeLeft = 40;
+        let timer = null;
+        let players = [];
+        let rooms = {};
+        let quizStarted = false;
+        let hasCompleted = false;
+        let urlRoom = null;
+        let syncChannel = null;
+        let globalSyncTimer = null;
+
+        // Google Sheets Configuration
+        const GOOGLE_SHEETS_CONFIG = {
+            // Your Google Apps Script Web App URL
+            SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyZECwGwQ7ulgb-MlZXAs6xU0ie51liBpYWI9_GbO5Q29Jz3vp1DyOBKqUb9u7q5RVO/exec',
+            SHEET_URL: 'https://docs.google.com/spreadsheets/d/1TZPwiiNP7JqTOeHlBpwzrtfN_JaBTOILMuOGgQaUJcs/edit?usp=sharing',
+            DEPLOYMENT_ID: 'AKfycbyZECwGwQ7ulgb-MlZXAs6xU0ie51liBpYWI9_GbO5Q29Jz3vp1DyOBKqUb9u7q5RVO',
+            SHEET_NAME: 'Quiz_Results',
+            ENABLED: false // ❌ Temporarily disabled - using local storage only
+        };
+
+        // 25 Multiple Choice Questions about Islam in Indonesia
+        const defaultQuestions = [
+            {
+                type: 'multiple',
+                question: 'Bagaimana Islam pertama kali masuk ke Indonesia?',
+                options: ['Penjajahan', 'Perdagangan', 'Perang', 'Penjajahan budaya'],
+                correct: 'B',
+                correctAnswer: 'Perdagangan'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Islam pertama di Indonesia adalah?',
+                options: ['Majapahit', 'Samudera Pasai', 'Sriwijaya', 'Mataram'],
+                correct: 'B',
+                correctAnswer: 'Samudera Pasai'
+            },
+            {
+                type: 'multiple',
+                question: 'Siapa yang dikenal sebagai Wali Songo?',
+                options: ['Raja-raja Islam', 'Sembilan penyebar Islam di Jawa', 'Pedagang Arab', 'Ulama Melayu'],
+                correct: 'B',
+                correctAnswer: 'Sembilan penyebar Islam di Jawa'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Demak didirikan oleh?',
+                options: ['Raden Patah', 'Sultan Agung', 'Pangeran Diponegoro', 'Sunan Kalijaga'],
+                correct: 'A',
+                correctAnswer: 'Raden Patah'
+            },
+            {
+                type: 'multiple',
+                question: 'Masjid tertua di Indonesia adalah?',
+                options: ['Masjid Agung Demak', 'Masjid Menara Kudus', 'Masjid Agung Banten', 'Masjid Kampung Laut'],
+                correct: 'D',
+                correctAnswer: 'Masjid Kampung Laut'
+            },
+            {
+                type: 'multiple',
+                question: 'Sunan Ampel memiliki nama asli?',
+                options: ['Raden Rahmat', 'Raden Makdum Ibrahim', 'Raden Qasim', 'Raden Paku'],
+                correct: 'A',
+                correctAnswer: 'Raden Rahmat'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Mataram Islam didirikan oleh?',
+                options: ['Panembahan Senopati', 'Sultan Agung', 'Pangeran Mangkubumi', 'Ki Ageng Pemanahan'],
+                correct: 'A',
+                correctAnswer: 'Panembahan Senopati'
+            },
+            {
+                type: 'multiple',
+                question: 'Siapa yang dikenal dengan sebutan "Sultan Agung"?',
+                options: ['Panembahan Senopati', 'Sultan Hanyokrokusumo', 'Amangkurat I', 'Pakubuwono I'],
+                correct: 'B',
+                correctAnswer: 'Sultan Hanyokrokusumo'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Aceh mencapai puncak kejayaan pada masa?',
+                options: ['Sultan Ali Mughayat Syah', 'Sultan Iskandar Muda', 'Sultan Hasanuddin', 'Sultan Ageng Tirtayasa'],
+                correct: 'B',
+                correctAnswer: 'Sultan Iskandar Muda'
+            },
+            {
+                type: 'multiple',
+                question: 'Sunan Kalijaga terkenal dengan metode dakwah?',
+                options: ['Kekerasan', 'Kebudayaan dan seni', 'Perdagangan', 'Politik'],
+                correct: 'B',
+                correctAnswer: 'Kebudayaan dan seni'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Banten didirikan oleh?',
+                options: ['Sultan Hasanuddin', 'Sultan Ageng Tirtayasa', 'Sunan Gunung Jati', 'Fatahillah'],
+                correct: 'C',
+                correctAnswer: 'Sunan Gunung Jati'
+            },
+            {
+                type: 'multiple',
+                question: 'Siapa yang memimpin perlawanan terhadap VOC di Banten?',
+                options: ['Sultan Ageng Tirtayasa', 'Sultan Hasanuddin', 'Pangeran Diponegoro', 'Cut Nyak Dien'],
+                correct: 'A',
+                correctAnswer: 'Sultan Ageng Tirtayasa'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Gowa-Tallo terletak di?',
+                options: ['Jawa', 'Sumatera', 'Sulawesi', 'Kalimantan'],
+                correct: 'C',
+                correctAnswer: 'Sulawesi'
+            },
+            {
+                type: 'multiple',
+                question: 'Sultan Hasanuddin dikenal sebagai?',
+                options: ['Ayam Jantan dari Timur', 'Singa Podang', 'Harimau Andalas', 'Elang Jawa'],
+                correct: 'A',
+                correctAnswer: 'Ayam Jantan dari Timur'
+            },
+            {
+                type: 'multiple',
+                question: 'Perang Diponegoro terjadi pada tahun?',
+                options: ['1825-1830', '1821-1825', '1830-1835', '1815-1820'],
+                correct: 'A',
+                correctAnswer: '1825-1830'
+            },
+            {
+                type: 'multiple',
+                question: 'Siapa yang memimpin Perang Padri?',
+                options: ['Tuanku Imam Bonjol', 'Cut Nyak Dien', 'Sultan Hasanuddin', 'Pangeran Diponegoro'],
+                correct: 'A',
+                correctAnswer: 'Tuanku Imam Bonjol'
+            },
+            {
+                type: 'multiple',
+                question: 'Kerajaan Ternate dan Tidore terletak di?',
+                options: ['Sulawesi', 'Maluku', 'Papua', 'Nusa Tenggara'],
+                correct: 'B',
+                correctAnswer: 'Maluku'
+            },
+            {
+                type: 'multiple',
+                question: 'Siapa yang dikenal sebagai "Fatahillah"?',
+                options: ['Sunan Gunung Jati', 'Faletehan', 'Sunan Kalijaga', 'Raden Patah'],
+                correct: 'B',
+                correctAnswer: 'Faletehan'
+            },
+            {
+                type: 'multiple',
+                question: 'Masjid Agung Demak dibangun pada abad ke?',
+                options: ['14', '15', '16', '17'],
+                correct: 'B',
+                correctAnswer: '15'
+            },
+            {
+                type: 'multiple',
+                question: 'Organisasi Islam pertama di Indonesia adalah?',
+                options: ['Muhammadiyah', 'Nahdlatul Ulama', 'Sarekat Islam', 'Persatuan Islam'],
+                correct: 'C',
+                correctAnswer: 'Sarekat Islam'
+            },
+            {
+                type: 'multiple',
+                question: 'Muhammadiyah didirikan oleh?',
+                options: ['KH. Ahmad Dahlan', 'KH. Hasyim Asyari', 'HOS Tjokroaminoto', 'KH. Mas Mansur'],
+                correct: 'A',
+                correctAnswer: 'KH. Ahmad Dahlan'
+            },
+            {
+                type: 'multiple',
+                question: 'Nahdlatul Ulama didirikan pada tahun?',
+                options: ['1912', '1926', '1918', '1930'],
+                correct: 'B',
+                correctAnswer: '1926'
+            },
+            {
+                type: 'multiple',
+                question: 'Siapa pendiri Nahdlatul Ulama?',
+                options: ['KH. Ahmad Dahlan', 'KH. Hasyim Asyari', 'KH. Wahab Hasbullah', 'KH. Bisri Syansuri'],
+                correct: 'B',
+                correctAnswer: 'KH. Hasyim Asyari'
+            },
+            {
+                type: 'multiple',
+                question: 'Pondok Pesantren tertua di Indonesia adalah?',
+                options: ['Pesantren Tebuireng', 'Pesantren Krapyak', 'Pesantren Ampel Denta', 'Pesantren Gontor'],
+                correct: 'C',
+                correctAnswer: 'Pesantren Ampel Denta'
+            },
+            {
+                type: 'multiple',
+                question: 'Sistem pendidikan Islam tradisional di Indonesia disebut?',
+                options: ['Madrasah', 'Pesantren', 'Surau', 'Langgar'],
+                correct: 'B',
+                correctAnswer: 'Pesantren'
+            }
+        ];
+
+        // Google Sheets Integration Functions
+        async function saveToGoogleSheets(playerData) {
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) {
+                console.log('Google Sheets integration disabled');
+                return false;
+            }
+
+            try {
+                // Create URL with parameters - encode properly
+                const baseUrl = GOOGLE_SHEETS_CONFIG.SCRIPT_URL;
+                const params = new URLSearchParams();
+                params.append('action', 'saveResult');
+                params.append('tanggal', new Date().toLocaleDateString('id-ID'));
+                params.append('nama', playerData.name);
+                params.append('skor', playerData.score.toString());
+
+                const fullUrl = `${baseUrl}?${params.toString()}`;
+
+                console.log('🚀 Sending to Google Sheets:', fullUrl);
+                console.log('📊 Data being sent:', {
+                    action: 'saveResult',
+                    tanggal: new Date().toLocaleDateString('id-ID'),
+                    nama: playerData.name,
+                    skor: playerData.score.toString()
+                });
+
+                const response = await fetch(fullUrl, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const responseText = await response.text();
+                console.log('📥 Raw response:', responseText);
+
+                try {
+                    const result = JSON.parse(responseText);
+                    console.log('📋 Parsed result:', result);
+
+                    if (result.success) {
+                        console.log('✅ Data berhasil disimpan ke Google Sheets');
+                        return true;
+                    } else {
+                        console.error('❌ Google Sheets error:', result.error);
+                        return false;
+                    }
+                } catch (parseError) {
+                    console.error('❌ JSON parse error:', parseError);
+                    console.log('Raw response was:', responseText);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Network error:', error);
+                return false;
+            }
+        }
+
+        async function loadFromGoogleSheets() {
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) {
+                return [];
+            }
+
+            try {
+                const url = `${GOOGLE_SHEETS_CONFIG.SCRIPT_URL}?action=getResults`;
+                console.log('📥 Loading data from Google Sheets:', url);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const responseText = await response.text();
+                console.log('📄 Raw load response:', responseText);
+
+                const result = JSON.parse(responseText);
+                console.log('📊 Parsed load result:', result);
+
+                if (result.success && result.data) {
+                    console.log('✅ Data loaded from Google Sheets:', result.data.length, 'records');
+                    // Return data structure matching: Tanggal, Nama Lengkap, Skor, Peringkat
+                    return result.data.map(row => ({
+                        tanggal: row.tanggal || new Date().toLocaleDateString('id-ID'),
+                        nama: row.nama || '',
+                        skor: parseInt(row.skor || 0),
+                        peringkat: parseInt(row.peringkat || 0)
+                    })).filter(item => item.nama.trim() !== '');
+                } else {
+                    console.error('❌ Error loading from Google Sheets:', result.error || 'Unknown error');
+                    return [];
+                }
+            } catch (error) {
+                console.error('❌ Error connecting to Google Sheets:', error);
+                return [];
+            }
+        }
+
+        async function resetGoogleSheetsData() {
+            if (!GOOGLE_SHEETS_CONFIG.ENABLED) {
+                return false;
+            }
+
+            try {
+                const url = `${GOOGLE_SHEETS_CONFIG.SCRIPT_URL}?action=resetRoom`;
+
+                const response = await fetch(url, {
+                    method: 'GET'
+                });
+
+                const result = await response.json();
+                return result.success;
+            } catch (error) {
+                console.error('Error resetting Google Sheets data:', error);
+                return false;
+            }
+        }
+
+        // Global sync system using multiple methods + Google Sheets
+        function initializeGlobalSync() {
+            // Method 1: BroadcastChannel for same-origin communication
+            if (typeof BroadcastChannel !== 'undefined') {
+                syncChannel = new BroadcastChannel('quiz_sync');
+                syncChannel.addEventListener('message', handleSyncMessage);
+            }
+
+            // Method 2: localStorage with storage events
+            window.addEventListener('storage', handleStorageSync);
+
+            // Method 3: Periodic sync with Google Sheets + local storage
+            globalSyncTimer = setInterval(performGlobalSync, 3000);
+
+            // Method 4: Window focus sync
+            window.addEventListener('focus', performGlobalSync);
+        }
+
+        function handleSyncMessage(event) {
+            if (event.data.type === 'room_update') {
+                rooms = event.data.rooms;
+                updateUI();
+            }
+        }
+
+        function handleStorageSync(event) {
+            if (event.key === 'quiz_global_data' && event.newValue) {
+                const data = JSON.parse(event.newValue);
+                rooms = data.rooms || {};
+                updateUI();
+            }
+        }
+
+        async function performGlobalSync() {
+            // Sync with Google Sheets if enabled
+            if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                try {
+                    const sheetsData = await loadFromGoogleSheets();
+                    if (sheetsData.length > 0) {
+                        // Store simplified data globally
+                        const globalData = {
+                            results: sheetsData,
+                            timestamp: Date.now(),
+                            source: 'google_sheets'
+                        };
+                        saveGlobalData(globalData);
+                        updateUI();
+                    }
+                } catch (error) {
+                    console.log('Google Sheets sync failed, using local data');
+                }
+            }
+
+            // Fallback to local sync
+            const globalData = loadGlobalData();
+            const localData = {
+                results: [],
+                timestamp: Date.now(),
+                source: 'local'
+            };
+
+            // Merge data (newer timestamps win)
+            if (!globalData || localData.timestamp > globalData.timestamp) {
+                saveGlobalData(localData);
+            } else {
+                updateUI();
+            }
+
+            // Broadcast to other tabs/windows
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'data_update',
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        function saveGlobalData(data) {
+            // Save to multiple storage locations for redundancy
+            localStorage.setItem('quiz_global_data', JSON.stringify(data));
+            sessionStorage.setItem('quiz_global_backup', JSON.stringify(data));
+
+            // Try to save to IndexedDB for persistence
+            try {
+                if ('indexedDB' in window) {
+                    const request = indexedDB.open('QuizDB', 1);
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        if (db.objectStoreNames.contains('quiz_data')) {
+                            const transaction = db.transaction(['quiz_data'], 'readwrite');
+                            const store = transaction.objectStore('quiz_data');
+                            store.put(data, 'global_rooms');
+                        }
+                    };
+                }
+            } catch (e) {
+                console.log('IndexedDB not available');
+            }
+        }
+
+        function loadGlobalData() {
+            // Try multiple sources
+            let data = null;
+
+            // Try localStorage first
+            try {
+                const stored = localStorage.getItem('quiz_global_data');
+                if (stored) data = JSON.parse(stored);
+            } catch (e) {}
+
+            // Fallback to sessionStorage
+            if (!data) {
+                try {
+                    const stored = sessionStorage.getItem('quiz_global_backup');
+                    if (stored) data = JSON.parse(stored);
+                } catch (e) {}
+            }
+
+            return data;
+        }
+
+        function updateUI() {
+            updateOnlineCount();
+            if (hasCompleted && !document.getElementById('thankYouPage').classList.contains('hidden')) {
+                showThankYouPage();
+            }
+        }
+
+        // Real-time sync for multiplayer
+        function syncRoomData() {
+            performGlobalSync();
+        }
+
+        // Initialize default data
+        function initializeData() {
+            questions = [...defaultQuestions];
+
+            // Check for room in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            urlRoom = urlParams.get('room');
+
+            // Load global data
+            const globalData = loadGlobalData();
+            rooms = globalData?.rooms || {
+                'OCEAN123': {
+                    code: 'OCEAN123',
+                    players: [],
+                    active: true,
+                    results: []
+                }
+            };
+
+            // If URL has room parameter, auto-fill and focus on name
+            if (urlRoom) {
+                document.getElementById('roomCode').value = urlRoom.toUpperCase();
+                document.getElementById('roomCode').readOnly = true;
+                document.getElementById('playerName').focus();
+
+                // Create room if it doesn't exist
+                if (!rooms[urlRoom.toUpperCase()]) {
+                    rooms[urlRoom.toUpperCase()] = {
+                        code: urlRoom.toUpperCase(),
+                        players: [],
+                        active: true,
+                        results: []
+                    };
+                    syncRoomData();
+                }
+            }
+
+            // Initialize global sync
+            initializeGlobalSync();
+        }
+
+        // Update online player count
+        function updateOnlineCount() {
+            let totalOnline = 0;
+            Object.values(rooms).forEach(room => {
+                totalOnline += room.players.length;
+            });
+            document.getElementById('onlineCount').textContent = totalOnline;
+        }
+
+        // Fuzzy string matching for essay answers
+        function calculateSimilarity(answer, ideal) {
+            const normalize = (str) => str.toLowerCase().replace(/[^\w\s]/g, '').trim();
+            const normalizedAnswer = normalize(answer);
+            const normalizedIdeal = normalize(ideal);
+
+            if (normalizedAnswer === normalizedIdeal) return 100;
+
+            const words1 = normalizedAnswer.split(/\s+/);
+            const words2 = normalizedIdeal.split(/\s+/);
+
+            let matches = 0;
+            words1.forEach(word => {
+                if (words2.some(w => w.includes(word) || word.includes(w))) {
+                    matches++;
+                }
+            });
+
+            const similarity = (matches / Math.max(words1.length, words2.length)) * 100;
+            return Math.min(similarity, 100);
+        }
+
+        // Sound effects
+        function playSound(frequency, duration, type = 'sine') {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                // Fallback for browsers without Web Audio API
+                console.log('Audio not supported');
+            }
+        }
+
+        function playCorrectSound() {
+            playSound(523, 0.2); // C5
+            setTimeout(() => playSound(659, 0.2), 100); // E5
+            setTimeout(() => playSound(784, 0.3), 200); // G5
+        }
+
+        function playWrongSound() {
+            playSound(200, 0.5, 'sawtooth');
+        }
+
+        function playTickSound() {
+            playSound(800, 0.1, 'square');
+        }
+
+        // Timer functions
+        function startTimer() {
+            timeLeft = 40;
+            updateTimerDisplay();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                // Play tick sound for last 10 seconds
+                if (timeLeft <= 10 && timeLeft > 0) {
+                    playTickSound();
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timeLeft').textContent = timeLeft;
+            const circumference = 175.84;
+            const offset = (timeLeft / 40) * circumference;
+            document.getElementById('timerCircle').style.strokeDashoffset = circumference - offset;
+        }
+
+        function handleTimeUp() {
+            playWrongSound();
+            showFeedback('clock', 'Waktu habis!', 'bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 border-2 border-orange-300');
+            setTimeout(() => {
+                nextQuestion();
+            }, 2000);
+        }
+
+        // Question display functions
+        function displayQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('progressBar').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+
+            if (question.type === 'multiple') {
+                document.getElementById('questionType').textContent = 'Pilihan Ganda';
+                displayMultipleChoice(question);
+            } else {
+                document.getElementById('questionType').textContent = 'Essay';
+                displayEssayQuestion();
+            }
+
+            startTimer();
+        }
+
+        function displayMultipleChoice(question) {
+            document.getElementById('mcOptions').classList.remove('hidden');
+            document.getElementById('essayInput').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('mcOptions');
+            optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const letter = String.fromCharCode(65 + index);
+                const button = document.createElement('button');
+                button.className = 'w-full p-4 text-left border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-3';
+                button.innerHTML = `
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center font-semibold text-blue-600">
+                        ${letter}
+                    </div>
+                    <span>${option}</span>
+                `;
+                button.onclick = () => selectAnswer(letter, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function displayEssayQuestion() {
+            document.getElementById('mcOptions').classList.add('hidden');
+            document.getElementById('essayInput').classList.remove('hidden');
+            document.getElementById('essayAnswer').value = '';
+
+            // No timer for essay questions
+            clearInterval(timer);
+            document.getElementById('timeLeft').textContent = '∞';
+            document.getElementById('timerCircle').style.strokeDashoffset = 0;
+        }
+
+        function selectAnswer(answer, buttonElement) {
+            clearInterval(timer);
+
+            // Disable all option buttons
+            const allButtons = document.querySelectorAll('#mcOptions button');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            const question = questions[currentQuestionIndex];
+            const isCorrect = answer === question.correct;
+
+            // Calculate score based on correctness and speed
+            let points = 0;
+            if (isCorrect) {
+                points = Math.max(100 - (40 - timeLeft) * 2, 50); // Minimum 50 points for correct answer
+                score += points;
+                playCorrectSound();
+            } else {
+                playWrongSound();
+            }
+
+            // Visual feedback
+            if (isCorrect) {
+                buttonElement.classList.add('pulse-correct');
+                showFeedback('check-circle', `Benar! +${points} poin`, 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-2 border-green-300');
+            } else {
+                buttonElement.classList.add('pulse-wrong');
+                showFeedback('times-circle', `Salah! Jawaban yang benar: ${question.correctAnswer}`, 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border-2 border-red-300');
+            }
+
+            document.getElementById('currentScore').textContent = score;
+
+            setTimeout(() => {
+                nextQuestion();
+            }, 3000);
+        }
+
+        function submitEssayAnswer() {
+            const answer = document.getElementById('essayAnswer').value.trim();
+            if (!answer) {
+                alert('Silakan tulis jawaban Anda terlebih dahulu!');
+                return;
+            }
+
+            clearInterval(timer);
+
+            // Disable essay input and button
+            document.getElementById('essayAnswer').disabled = true;
+            document.getElementById('submitEssay').disabled = true;
+            document.getElementById('submitEssay').classList.add('opacity-50', 'cursor-not-allowed');
+
+            const question = questions[currentQuestionIndex];
+            const similarity = calculateSimilarity(answer, question.idealAnswer);
+
+            let points = 0;
+            if (similarity >= 70) {
+                points = Math.max(100 - (40 - timeLeft) * 2, 60);
+                score += points;
+                playCorrectSound();
+                showFeedback('check-circle', `Jawaban bagus! Kemiripan: ${similarity.toFixed(0)}% (+${points} poin)`, 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-2 border-green-300');
+            } else if (similarity >= 40) {
+                points = Math.max(50 - (40 - timeLeft) * 1, 30);
+                score += points;
+                playSound(400, 0.3);
+                showFeedback('exclamation-triangle', `Jawaban cukup baik! Kemiripan: ${similarity.toFixed(0)}% (+${points} poin)`, 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border-2 border-yellow-300');
+            } else {
+                playWrongSound();
+                showFeedback('times-circle', `Jawaban kurang tepat. Kemiripan: ${similarity.toFixed(0)}%`, 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border-2 border-red-300');
+            }
+
+            document.getElementById('currentScore').textContent = score;
+
+            setTimeout(() => {
+                nextQuestion();
+            }, 4000);
+        }
+
+        function showFeedback(iconClass, text, className) {
+            const feedback = document.getElementById('feedback');
+            document.getElementById('feedbackIcon').innerHTML = `<i class="fas fa-${iconClass} text-4xl mb-2"></i>`;
+            document.getElementById('feedbackText').textContent = text;
+            feedback.className = `mb-6 p-6 rounded-2xl text-center font-medium shadow-lg ${className}`;
+            feedback.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback').classList.add('hidden');
+
+            // Reset essay input state
+            document.getElementById('essayAnswer').disabled = false;
+            document.getElementById('submitEssay').disabled = false;
+            document.getElementById('submitEssay').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            currentQuestionIndex++;
+            saveProgress(); // Save progress after each question
+
+            if (currentQuestionIndex >= questions.length) {
+                finishQuiz();
+            } else {
+                displayQuestion();
+            }
+        }
+
+        async function finishQuiz() {
+            // Clear any existing timers
+            clearInterval(timer);
+
+            // Mark as completed
+            hasCompleted = true;
+            const completionKey = `completion_${currentRoom}_${currentPlayer}`;
+            localStorage.setItem(completionKey, JSON.stringify({
+                completed: true,
+                timestamp: Date.now()
+            }));
+
+            // Show completion animation first
+            document.getElementById('quizPage').classList.add('hidden');
+            document.getElementById('completionScreen').classList.remove('hidden');
+
+            console.log('🏁 Quiz finished! Saving results...');
+            console.log('Player:', currentPlayer, 'Room:', currentRoom, 'Score:', score);
+
+            // Save result with Google Sheets integration
+            if (rooms[currentRoom]) {
+                const existingResult = rooms[currentRoom].results.find(r => r.name === currentPlayer);
+                if (!existingResult) {
+                    const playerData = {
+                        name: currentPlayer,
+                        score: score,
+                        room: currentRoom,
+                        date: new Date().toLocaleDateString('id-ID'),
+                        timestamp: Date.now()
+                    };
+
+                    console.log('💾 Saving player data:', playerData);
+
+                    // Save to local storage first
+                    rooms[currentRoom].results.push(playerData);
+                    syncRoomData();
+                    console.log('✅ Saved to local storage');
+
+                    // Try to save to Google Sheets with better error handling
+                    try {
+                        console.log('☁️ Attempting to save to Google Sheets...');
+                        const sheetsSuccess = await saveToGoogleSheets(playerData);
+                        if (sheetsSuccess) {
+                            console.log('✅ Successfully saved to Google Sheets!');
+                        } else {
+                            console.log('❌ Failed to save to Google Sheets, but local data is saved');
+                        }
+                    } catch (error) {
+                        console.log('❌ Error saving to Google Sheets:', error);
+                        console.log('📱 Data saved locally as backup');
+                    }
+                } else {
+                    console.log('⚠️ Player already has a result, skipping save');
+                }
+            } else {
+                console.log('❌ Room not found:', currentRoom);
+            }
+
+            // Show thank you page after 3 seconds
+            setTimeout(() => {
+                document.getElementById('completionScreen').classList.add('hidden');
+                showThankYouPage();
+            }, 3000);
+        }
+
+        async function showThankYouPage() {
+            document.getElementById('quizPage').classList.add('hidden');
+            document.getElementById('thankYouPage').classList.remove('hidden');
+
+            // Display final score and player name
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalPlayerName').textContent = currentPlayer;
+
+            // Show motivational message based on score
+            showMotivationalMessage(score);
+
+            console.log('🎉 Showing thank you page for:', currentPlayer, 'Score:', score);
+        }
+
+        function showMotivationalMessage(finalScore) {
+            const titleElement = document.getElementById('motivationTitle');
+            const messageElement = document.getElementById('motivationMessage');
+
+            if (finalScore >= 2000) {
+                titleElement.textContent = "🏆 SEMPURNA!";
+                messageElement.textContent = "Wow! Anda benar-benar menguasai materi Sejarah Islam Indonesia! Prestasi yang luar biasa ini menunjukkan dedikasi dan kerja keras Anda dalam belajar. Terus pertahankan semangat belajar yang tinggi ini! 🌟";
+            } else if (finalScore >= 1500) {
+                titleElement.textContent = "⭐ HEBAT SEKALI!";
+                messageElement.textContent = "Hasil yang sangat memuaskan! Anda menunjukkan pemahaman yang baik tentang sejarah Islam di Indonesia. Terus tingkatkan dan jangan pernah berhenti belajar. Masa depan cerah menanti Anda! 🚀";
+            } else if (finalScore >= 1000) {
+                titleElement.textContent = "👍 BAGUS!";
+                messageElement.textContent = "Kerja yang baik! Anda sudah menunjukkan usaha yang patut diapresiasi. Setiap pembelajaran adalah langkah maju. Terus semangat dan jangan menyerah untuk terus berkembang! 💪";
+            } else if (finalScore >= 500) {
+                titleElement.textContent = "🌱 TERUS SEMANGAT!";
+                messageElement.textContent = "Setiap perjalanan dimulai dengan langkah pertama. Anda sudah berani mencoba dan itu adalah hal yang luar biasa! Terus belajar, berlatih, dan percaya pada kemampuan diri sendiri! 🌈";
+            } else {
+                titleElement.textContent = "💪 JANGAN MENYERAH!";
+                messageElement.textContent = "Kegagalan adalah guru terbaik dalam hidup. Yang terpenting adalah Anda sudah berusaha dan berani menghadapi tantangan. Terus belajar, berlatih, dan yakin bahwa Anda pasti bisa lebih baik! 🔥";
+            }
+        }
+
+        // Event listeners
+        document.getElementById('joinForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('playerName').value.trim();
+            const code = document.getElementById('roomCode').value.trim().toUpperCase();
+
+            if (!rooms[code]) {
+                alert('Kode kuis tidak valid!');
+                return;
+            }
+
+            // Allow multiple attempts - remove completion check
+            console.log('Starting quiz for:', name, 'in room:', code);
+
+            // Continue with quiz start
+            startQuiz(name, code);
+        });
+
+        function startQuiz(name, code) {
+            currentPlayer = name;
+            currentRoom = code;
+            currentQuestionIndex = 0;
+            score = 0;
+            quizStarted = true;
+
+            // Add player to room
+            if (!rooms[code].players.includes(name)) {
+                rooms[code].players.push(name);
+                syncRoomData();
+            }
+
+            document.getElementById('joinPage').classList.add('hidden');
+            document.getElementById('quizPage').classList.remove('hidden');
+            document.getElementById('currentRoom').textContent = code;
+            document.getElementById('currentScore').textContent = score;
+
+            displayQuestion();
+        }
+
+        document.getElementById('submitEssay').addEventListener('click', submitEssayAnswer);
+
+        // WhatsApp share functionality
+        document.getElementById('shareWhatsApp').addEventListener('click', function() {
+            const currentDate = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const message = `🎓 *HASIL KUIS SEJARAH ISLAM INDONESIA*
+
+📚 *Kelas:* X-C
+👤 *Nama:* ${currentPlayer}
+📅 *Tanggal:* ${currentDate}
+🎯 *Skor:* ${score}/2500 poin
+
+✅ Kuis telah diselesaikan dengan baik!
+
+_Dikirim otomatis dari X-C QUIZZIZ_`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+
+            // Open WhatsApp in new tab
+            window.open(whatsappUrl, '_blank');
+        });
+
+        document.getElementById('newQuizBtn').addEventListener('click', function() {
+            // Clear all session data
+            sessionStorage.removeItem('quizSession');
+
+            // Reset all states
+            currentPlayer = null;
+            currentRoom = null;
+            currentQuestionIndex = 0;
+            score = 0;
+            quizStarted = false;
+            hasCompleted = false;
+            clearInterval(timer);
+
+            // Reset form fields
+            document.getElementById('playerName').value = '';
+            if (!urlRoom) {
+                document.getElementById('roomCode').value = '';
+                document.getElementById('roomCode').readOnly = false;
+            }
+
+            // Show join page
+            document.getElementById('thankYouPage').classList.add('hidden');
+            document.getElementById('completionScreen').classList.add('hidden');
+            document.getElementById('quizPage').classList.add('hidden');
+            document.getElementById('joinPage').classList.remove('hidden');
+        });
+
+        document.getElementById('adminResetBtn').addEventListener('click', async function() {
+            const adminCode = prompt('Masukkan kode admin:');
+            if (adminCode === 'RESET2024') {
+                const confirmReset = confirm('Reset semua data completion untuk room ini?\n\nIni akan menghapus data dari:\n- Local Storage\n- Google Sheets (jika aktif)');
+                if (confirmReset) {
+                    // Show loading
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus data...';
+                    this.disabled = true;
+
+                    try {
+                        // Clear all completion data for this room
+                        const keys = Object.keys(localStorage);
+                        keys.forEach(key => {
+                            if (key.startsWith(`completion_${currentRoom}_`)) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+
+                        // Clear room results locally
+                        if (rooms[currentRoom]) {
+                            rooms[currentRoom].results = [];
+                            syncRoomData();
+                        }
+
+                        // Reset Google Sheets data if enabled
+                        if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                            const sheetsReset = await resetGoogleSheetsData();
+                            if (sheetsReset) {
+                                alert('Data berhasil direset dari Local Storage dan Google Sheets!');
+                            } else {
+                                alert('Data Local Storage berhasil direset!\nGoogle Sheets: Gagal reset (periksa koneksi)');
+                            }
+                        } else {
+                            alert('Data completion berhasil direset dari Local Storage!');
+                        }
+
+                        // Refresh leaderboard
+                        showLeaderboard();
+
+                    } catch (error) {
+                        alert('Error saat reset data: ' + error.message);
+                    } finally {
+                        // Restore button
+                        this.innerHTML = '<i class="fas fa-key mr-2"></i>Reset Admin';
+                        this.disabled = false;
+                    }
+                }
+            } else if (adminCode !== null) {
+                alert('Kode admin salah!');
+            }
+        });
+
+        // Session persistence
+        function saveSession() {
+            if (currentPlayer && currentRoom) {
+                sessionStorage.setItem('quizSession', JSON.stringify({
+                    player: currentPlayer,
+                    room: currentRoom,
+                    questionIndex: currentQuestionIndex,
+                    score: score,
+                    started: quizStarted
+                }));
+            }
+        }
+
+        function loadSession() {
+            const session = sessionStorage.getItem('quizSession');
+            if (session) {
+                const data = JSON.parse(session);
+
+                // Check if already completed
+                const completionKey = `completion_${data.room}_${data.player}`;
+                const completionData = localStorage.getItem(completionKey);
+
+                if (completionData) {
+                    const completion = JSON.parse(completionData);
+                    if (completion.completed) {
+                        // Clear session and show join page
+                        sessionStorage.removeItem('quizSession');
+                        return;
+                    }
+                }
+
+                // Continue loading session
+                continueLoadingSession(data);
+            }
+        }
+
+        function continueLoadingSession(data) {
+            currentPlayer = data.player;
+            currentRoom = data.room;
+            currentQuestionIndex = data.questionIndex;
+            score = data.score;
+            quizStarted = data.started;
+
+            if (quizStarted && currentQuestionIndex < questions.length) {
+                document.getElementById('joinPage').classList.add('hidden');
+                document.getElementById('quizPage').classList.remove('hidden');
+                document.getElementById('currentRoom').textContent = currentRoom;
+                document.getElementById('currentScore').textContent = score;
+                displayQuestion();
+            } else if (currentQuestionIndex >= questions.length) {
+                showThankYouPage();
+            }
+        }
+
+        // Save session on each question
+        function saveProgress() {
+            saveSession();
+        }
+
+        // Auto-uppercase room code input
+        document.getElementById('roomCode').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (globalSyncTimer) {
+                clearInterval(globalSyncTimer);
+            }
+            if (syncChannel) {
+                syncChannel.close();
+            }
+        });
+
+        // Update sync status display
+        function updateSyncStatus() {
+            const statusElement = document.getElementById('syncStatus');
+            if (GOOGLE_SHEETS_CONFIG.ENABLED) {
+                statusElement.textContent = 'Google Sheets Connected';
+                statusElement.parentElement.querySelector('.w-2').className = 'w-2 h-2 bg-green-400 rounded-full animate-pulse';
+            } else {
+                statusElement.textContent = 'Local Storage Only';
+                statusElement.parentElement.querySelector('.w-2').className = 'w-2 h-2 bg-yellow-400 rounded-full animate-pulse';
+            }
+        }
+
+        // Initialize the application
+        initializeData();
+        loadSession();
+        updateOnlineCount();
+        updateSyncStatus();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966598aa40e3ec19',t:'MTc1MzcxODQ5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+
+  <script type="module" src="script.js"></script>
+
+</body>
+
+</html>
